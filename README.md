@@ -6,7 +6,7 @@ enumerating a parameter space with a single integer instead of nested loops.
 
 I originally wrote this to convert between flat job indices and multi-dimensional coordinates
 for a thread-pool work dispatcher, where the shape of the space isn't known until runtime. It
-turned out useful on its own wherever you need dynamically-sized multi-dimensional indexing
+turned out to be useful on its own wherever you need dynamically-sized multi-dimensional indexing
 without nested loops or a compile-time-fixed shape.
 
 ```cpp
