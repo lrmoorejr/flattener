@@ -32,11 +32,19 @@
 #elif __has_include("Ensure.hpp")
 	#include "Ensure.hpp"
 #else
+	// Guard against Ensure.hpp having already been included under a path our
+	// __has_include checks above don't know about (e.g. vendored elsewhere as
+	// "3rdparty/Ensure.hpp") -- COMMONS_ENSURE_HPP is defined by Ensure.hpp
+	// itself, so this still catches that case even under an unknown filename.
+	// (throw_if is a function template, not a macro, so #ifndef can't guard
+	// it directly -- redefining it without this check would be a hard error.)
+	#ifndef COMMONS_ENSURE_HPP
 	template<class T, class... Args>
 	constexpr inline void throw_if(bool condition, Args&&... args) {
 		if (condition)
 			throw T(std::forward<Args>(args)...);
 	}
+	#endif
 #endif
 
 /**
