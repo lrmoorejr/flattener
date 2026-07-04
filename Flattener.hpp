@@ -171,10 +171,9 @@ public:
 		for(size_t i = 0; i < divisors.size(); ++i) {
 			if constexpr (std::is_signed_v<CoordT>)
 				throw_if<std::out_of_range>(coordinates[i] < 0, "Flattener coordinate is negative");
-			size_t dimension = divisors.size() - i - 1;
-			throw_if<std::out_of_range>(static_cast<unsigned int>(coordinates[i]) >= modulators[dimension],
+			throw_if<std::out_of_range>(static_cast<unsigned int>(coordinates[i]) >= modulators[i],
 				"Flattener coordinate out of range for its dimension");
-			index += coordinates[i] * divisors[dimension];
+			index += coordinates[i] * divisors[i];
 		}
 		// No final "index >= count" check needed here: once every coordinate has passed the
 		// per-dimension bound check above, index is provably < count. (Mixed-radix identity:
@@ -234,22 +233,27 @@ private:
 	// flatIndex < size() themselves. Used directly by indices(), which validates flatIndex
 	// once up front rather than paying for the same check again on every dimension.
 	constexpr inline unsigned int indexUnchecked(unsigned int dimension, T flatIndex) const {
-		dimension = static_cast<std::uint32_t>(modulators.size()) - dimension - 1;
 		return flatIndex / divisors[dimension] % modulators[dimension];
 	}
 
 	template<class It>
 	constexpr void initialize(It rbegin, It rend) {
-		// Compute modulators, divisors, and the overall count of the space
+		// Walk the shape innermost-first: a dimension's divisor is the product of every
+		// dimension inner to it, which is exactly the running count accumulated so far from
+		// this direction, so it can be written straight into its final, user-facing slot
+		// (index 0 is outermost) in a single pass -- same trick as
+		// FastFlattener::addDimension, just traversed in the direction where each dimension's
+		// running product is already known instead of needing to look ahead.
 		const size_t dimensionCount = static_cast<size_t>(std::distance(rbegin, rend));
-		divisors.reserve(dimensionCount);
-		modulators.reserve(dimensionCount);
+		modulators.resize(dimensionCount);
+		divisors.resize(dimensionCount);
 		count = 1;
+		size_t d = dimensionCount;
 		for(auto iterator = rbegin; iterator != rend; ++iterator) {
-			divisors.push_back(static_cast<T>(count));
+			divisors[--d] = static_cast<T>(count);
 			std::uint32_t dimensionSize = *iterator;
 			throw_if<std::invalid_argument>(dimensionSize == 0, "Flattener dimension size cannot be 0");
-			modulators.push_back(dimensionSize);
+			modulators[d] = dimensionSize;
 			T countBefore = count;
 			count *= dimensionSize;
 			// Detect multiplication overflow: since dimensionSize != 0, count / dimensionSize
