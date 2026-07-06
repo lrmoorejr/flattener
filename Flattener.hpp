@@ -38,7 +38,10 @@
 	// itself, so this still catches that case even under an unknown filename.
 	// (throw_if is a function template, not a macro, so #ifndef can't guard
 	// it directly -- redefining it without this check would be a hard error.)
-	#ifndef COMMONS_ENSURE_HPP
+	// A second guard (distinct from COMMONS_ENSURE_HPP) covers the case where two
+	// headers using this same standalone fallback are included together.
+	#if !defined(COMMONS_ENSURE_HPP) && !defined(COMMONS_THROW_IF_FALLBACK_DEFINED)
+	#define COMMONS_THROW_IF_FALLBACK_DEFINED
 	template<class T, class... Args>
 	constexpr inline void throw_if(bool condition, Args&&... args) {
 		if (condition)
