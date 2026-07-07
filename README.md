@@ -89,4 +89,4 @@ static_assert(total == 24);
 
 ## License
 
-Apache License 2.0 -- see [LICENSE](LICENSE).
+Apache License 2.0 -- see [LICENSE](https://github.com/lrmoorejr/flattener/blob/main/LICENSE).
