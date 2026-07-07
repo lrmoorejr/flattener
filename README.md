@@ -1,5 +1,7 @@
 # Flattener.hpp
 
+[API docs](https://lrmoorejr.github.io/flattener/)
+
 A small header for mapping a multi-dimensional coordinate space to a single flat index, and
 back -- for backing a dynamically-sized multi-dimensional array with one flat buffer, or for
 enumerating a parameter space with a single integer instead of nested loops.
