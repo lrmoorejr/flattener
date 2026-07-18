@@ -69,10 +69,14 @@
  * constant evaluation that allocated them.
  *
  * @tparam T Type used for flat indices and the total element count. Defaults to size_t; use a
- * wider or narrower type to match how large a flattened space you need to represent.
+ * wider or narrower unsigned type to match how large a flattened space you need to represent.
+ * Must be unsigned: the overflow check in the constructor relies on unsigned wraparound being
+ * well-defined, which isn't true for a signed type (its overflow is undefined behavior).
  */
 template<typename T=size_t>
 class Flattener {
+	static_assert(std::is_unsigned_v<T>, "Flattener<T> requires an unsigned T");
+
 public:
 	/**
 	 * @brief Constructs a Flattener for the given shape.
@@ -262,8 +266,10 @@ private:
 			// Detect multiplication overflow: since dimensionSize != 0, count / dimensionSize
 			// must recover countBefore exactly unless count wrapped around T's range. (A plain
 			// "count >= countBefore" comparison is not a reliable overflow check for unsigned
-			// multiplication -- the wrapped result can still land above countBefore.)
-			throw_if<std::overflow_error>(count / dimensionSize != countBefore,
+			// multiplication -- the wrapped result can still land above countBefore.) The
+			// explicit cast keeps the division entirely in T, rather than silently mixing T
+			// with dimensionSize's std::uint32_t if T happens to be signed.
+			throw_if<std::overflow_error>(count / static_cast<T>(dimensionSize) != countBefore,
 				"Flattener dimension count overflowed");
 		}
 	}
